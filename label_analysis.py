@@ -96,7 +96,7 @@ def plot_confusion_matrix(cm, y, id, title='Confusion matrix', cmap=plt.cm.Blues
 
 
 if __name__ == "__main__":
-    ipath = '/Users/cipriancorneanu/Research/data/neurochild/data_14_04_2016/labels/'
+    ipath = '/Users/cipriancorneanu/Research/data/neurochild/data/labels/' # Add your path here
     fnames = [('1_1.xml','1_2.xml'), ('4_1.xml','4_2.xml'), ('6_1.xml', '6_2.xml'), ('7_1.xml','7_2.xml'),('9_1.xml','9_2.xml') ]
 
 
