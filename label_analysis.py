@@ -3,6 +3,7 @@ __author__ = 'cipriancorneanu'
 from xml.dom import minidom
 import matplotlib.pylab as plt
 import numpy as np
+import os
 import math
 
 def load_data(filename):
@@ -97,29 +98,43 @@ def plot_confusion_matrix(cm, y, id, title='Confusion matrix', cmap=plt.cm.Blues
 
 if __name__ == "__main__":
     ipath = '/Users/cipriancorneanu/Research/data/neurochild/data/labels/' # Add your path here
-    fnames = [('1_1.xml','1_2.xml'), ('4_1.xml','4_2.xml'), ('6_1.xml', '6_2.xml'), ('7_1.xml','7_2.xml'),('9_1.xml','9_2.xml') ]
+    filename_labels = 'label_names.xml'
 
+    # Load label codes
+    names = load_names(filename_labels)
 
-    for f in fnames:
-        filename_labels = 'label_names.xml'
-        id = f[0].split('_')[0]
+    # Read label files
+    fnames = [f for f in os.listdir(ipath) if f.endswith('.xml')]
 
-        print 'Process video ' + id
+    # Split by labelers
+    fnames_1 = [f for f in fnames if f.split('_')[1].split('.')[0] == '1']
+    fnames_2 = [f for f in fnames if f.split('_')[1].split('.')[0] == '2']
 
-        # Load data
-        data1 = load_data(ipath+f[0])
-        data2 = load_data(ipath+f[1])
-        names = load_names(filename_labels)
+    # Read
+    data1 = [load_data(ipath+f) for f in fnames_1]
+    data2 = [load_data(ipath+f) for f in fnames_2]
 
-        # If data does not have equal length
-        data1, data2 = equalize(data1, data2)
+    # Equalize
+    data = [equalize(dt1, dt2) for dt1, dt2 in zip(data1, data2)]
 
-        # Plot correlation
-        print stats(data1, data2)
+    # Split
+    data1 = np.concatenate([d[0] for d in data])
+    data2 = np.concatenate([d[1] for d in data])
 
-        # Plot labels
-        plot_data(data1, data2, names, 'video_'+str(id))
+    # Plot correlation btw labelers
+    print stats(data1, data2)
 
-        # Plot confusion mat
-        m = confusion_mat(data1, data2)
-        plot_confusion_matrix(m, names, 'video_'+str(id))
+    # Plot labels
+    plot_data(data1, data2, names, '')
+
+    # Plot confusion mat
+    m = confusion_mat(data1, data2)
+    plot_confusion_matrix(m, names, 'video_'+str(id))
+
+    # Plot label intersection distribution
+    x, bins = np.histogram([x for x, y in zip(data1, data2) if x==y], bins = 11, range = (-0.5, 10.5))
+    x = [float(item)/np.sum(x) for item in x]
+
+    ind_sort = np.argsort(x)
+    for i in ind_sort:
+        print '{} : {}'.format(names[i], x[i])
